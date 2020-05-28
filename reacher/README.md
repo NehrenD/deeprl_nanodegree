@@ -33,20 +33,22 @@ conda activate reacher
 
 ### Zip Content
 -README.md this file
--agent  package containing double_ddqn.pyt implementation of the Agent
--network package containing duelin_dqn.py implementing the Network
 -util package containing some utilities
--checkpoint_solution.pth contains the checkpoint file with the trained parameters
--Navigation_Project_Training.ipynb Notebook with the implementation of the training process
+-ddpg_model_ptan.py python file containing the config the agent and the actor and critic networks
+-learned_state.ckp contains the checkpoint file with the trained parameters
+-Continuous_Control_Training.ipynb Notebook with the implementation of the training process
 -Report.ipynb A notebook explaning the project and the solution with rewards plot and demonstration that agent solved the environment
--rewards_plot.eps image for the rewards plot
+-loss_actor.csv csv file from tensorboard with the loss of the actor
+-loss_critic.csv csv file from tensorboard with the loss of the critic
+-reward.csv csv file from tensorboard with the raw rewards
+-reward_100.csv csv file from tensorboard with the rewards of the trailing 100 episodes
 -navigation_eng.yml conda env config
--Banana.app Unity environment
+-Reacher.app Unity environment
 
 ### Instructions 
 
 #### For Training
-Run Jupyter Notebook and open Navigation_Project_Training.ipynb
+Run Continuous_Control_Training.ipynb.ipynb
 Execute notebook
 
 #### For Evaluation

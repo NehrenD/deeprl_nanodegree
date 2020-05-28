@@ -1,41 +1,66 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
 import numpy as np
-import copy
-import random
-from collections import deque,namedtuple
+import ptan
 
 #UTILS
 class Config():
 
     #NETWORK
 
-    ACTOR_FC1_UNITS = 64
+    ACTOR_FC1_UNITS = 128
     ACTOR_FC2_UNITS = 64
-    CRITIC_FC1_UNITS = 64
+    CRITIC_FC1_UNITS = 128
     CRITIC_FC2_UNITS = 64
     NOISE_THETA = 0.15
     NOISE_SIGMA = 0.2
     LR_ACTOR = 1e-4
-    LR_CRITIC = 1e-3
-    TAU = 1e-3
-    WEIGHT_DECAY = 0  # L2 weight decay
+    LR_CRITIC = 1e-4
+    TAU = 1e-4
 
     #REPLAY BUFFER
     BUFFER_SIZE = int(1e6)
-    BATCH_SIZE = 128
+    BATCH_SIZE = 256
 
     GAMMA = 0.99
 
-    #RUNS
-    MAX_STEPS = 500
-    TRAIN_STEPS = 20
-    TRAIN_TIMES = 10
-
     device = 'cpu'
 
+
+class AgentDDPG(ptan.agent.BaseAgent):
+
+    def __init__(self, net, device="cpu", ou_enabled=True, ou_mu=0.0, ou_teta=0.15, ou_sigma=0.2, ou_epsilon=1.0):
+        self.net = net
+        self.device = device
+        self.ou_enabled = ou_enabled
+        self.ou_mu = ou_mu
+        self.ou_teta = ou_teta
+        self.ou_sigma = ou_sigma
+        self.ou_epsilon = ou_epsilon
+
+    def initial_state(self):
+        return None
+
+    def __call__(self, states, agent_states):
+        states_v = ptan.agent.float32_preprocessor(states).to(self.device)
+        mu_v = self.net(states_v)
+        actions = mu_v.data.cpu().numpy()
+
+        if self.ou_enabled and self.ou_epsilon > 0:
+            new_a_states = []
+            for a_state, action in zip(agent_states, actions):
+                if a_state is None:
+                    a_state = np.zeros(shape=action.shape, dtype=np.float32)
+                a_state += self.ou_teta * (self.ou_mu - a_state)
+                a_state += self.ou_sigma * np.random.normal(size=action.shape)
+
+                action += self.ou_epsilon * a_state
+                new_a_states.append(a_state)
+        else:
+            new_a_states = agent_states
+
+        actions = np.clip(actions, -1, 1)
+        return actions, new_a_states
 
 class DDPGActor(nn.Module):
     """Actor (Policy) Model."""
